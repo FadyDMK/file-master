@@ -3,7 +3,7 @@ const express = require("express");
 const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
 const app = express();
-const port = 3000 || process.env.PORT;
+const port = process.env.PORT || 3000 ;
 const path = require("path");
 const session = require("express-session");
 const { PrismaSessionStore } = require("@quixo3/prisma-session-store");
@@ -11,17 +11,16 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const { Pool } = require("pg");
 const passport = require("passport");
-const LocalStrategy = require('passport-local').Strategy;
+const LocalStrategy = require("passport-local").Strategy;
+const bcrypt = require("bcrypt");
+const helmet = require("helmet");
 
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
-app.use(session({ secret: "cats", resave: false, saveUninitialized: false }));
-app.use(passport.session());
-app.use(express.urlencoded({ extended: false }));
+app.use(helmet());
 
 // app.use(
 //   session({
@@ -39,27 +38,33 @@ app.use(express.urlencoded({ extended: false }));
 //   })
 // );
 
-app.use(session({ secret: "cats", resave: false, saveUninitialized: false }));
+app.use(session({ secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: false }));
 app.use(passport.session());
 app.use(express.urlencoded({ extended: false }));
 
 passport.use(
-  new LocalStrategy(async (username, password, done) => {
-    try {
-      const { rows } = await prisma.message.findMany();
-      const user = rows[0];
+  new LocalStrategy(
+    { usernameField: "email", passwordField: "password" },
+    async (email, password, done) => {
+      try {
+        const user = await prisma.user.findUnique({
+          where: {
+            email: email,
+          },
+        });
 
-      if (!user) {
-        return done(null, false, { message: "Incorrect username" });
+        if (!user) {
+          return done(null, false, { message: "Incorrect username" });
+        }
+        if (!(await bcrypt.compare(password, user.password))) {
+          return done(null, false, { message: "Incorrect password" });
+        }
+        return done(null, user);
+      } catch (err) {
+        return done(err);
       }
-      if (user.password !== password) {
-        return done(null, false, { message: "Incorrect password" });
-      }
-      return done(null, user);
-    } catch(err) {
-      return done(err);
     }
-  })
+  )
 );
 
 passport.serializeUser((user, done) => {
@@ -68,21 +73,20 @@ passport.serializeUser((user, done) => {
 
 passport.deserializeUser(async (id, done) => {
   try {
-    const rows = await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: {
         id: id,
       },
     });
-    const user = rows[0];
 
     done(null, user);
-  } catch(err) {
+  } catch (err) {
     done(err);
   }
 });
 
-
 app.get("/", (req, res) => {
+  console.log(req.user);
   res.render("index", { user: req.user });
 });
 
@@ -97,18 +101,19 @@ app.get("/log-out", (req, res, next) => {
   });
 });
 
-
 app.post("/sign-up", async (req, res, next) => {
   try {
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
     await prisma.user.create({
       data: {
         name: req.body.username,
-        password: req.body.password,
+        password: hashedPassword,
         email: req.body.email,
-      }});
+      },
+    });
 
     res.redirect("/");
-  } catch(err) {
+  } catch (err) {
     return next(err);
   }
 });
@@ -117,10 +122,13 @@ app.post(
   "/log-in",
   passport.authenticate("local", {
     successRedirect: "/",
-    failureRedirect: "/"
+    failureRedirect: "/",
   })
 );
 
+app.get("*", (req, res) => {
+  res.status(404).send("404 Not Found");
+});
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

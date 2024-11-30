@@ -25,7 +25,7 @@ model User {
   createdAt DateTime @default(now())
   email     String   @unique
   password  String  @db.VarChar(255)
-  name      String?
+  name      String? @unique
   role      Role     @default(USER)
   Post      File[]
 }
