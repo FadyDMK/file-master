@@ -32,6 +32,7 @@ model User {
 
 model File {
   id         Int      @id @default(autoincrement())
+  path       String   @unique
   uploadedAt DateTime @default(now())
   name       String   @db.VarChar(255)
   uploader   User?    @relation(fields: [uploaderId], references: [id])
