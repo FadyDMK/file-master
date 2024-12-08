@@ -20,23 +20,40 @@ model Session {
   expiresAt DateTime
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  email     String   @unique
-  password  String  @db.VarChar(255)
-  name      String? @unique
-  role      Role     @default(USER)
-  Post      File[]
+model Folder {
+  id         Int      @id @default(autoincrement())
+  name       String
+  path       String?   @unique // Optional for storing relative paths
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  parentId   Int?     // For nested folders
+  parent     Folder?  @relation("ParentFolder", fields: [parentId], references: [id])
+  subfolders Folder[] @relation("ParentFolder")
+  files      File[]
+  owner      User?    @relation(fields: [ownerId], references: [id])
+  ownerId    Int?
 }
 
 model File {
   id         Int      @id @default(autoincrement())
-  path       String   @unique
-  uploadedAt DateTime @default(now())
+  path       String   @unique // File storage path
   name       String   @db.VarChar(255)
+  uploadedAt DateTime @default(now())
+  folderId   Int?     // File's parent folder
+  folder     Folder?  @relation(fields: [folderId], references: [id])
   uploader   User?    @relation(fields: [uploaderId], references: [id])
   uploaderId Int?
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String   @db.VarChar(255)
+  name      String?  @unique
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  folders   Folder[] // User-owned folders
+  files     File[]   // User-uploaded files
 }
 
 enum Role {

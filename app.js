@@ -1,4 +1,3 @@
-
 require("dotenv").config();
 const express = require("express");
 const app = express();
@@ -37,6 +36,7 @@ app.use(
     }),
   })
 );
+
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.urlencoded({ extended: false }));
