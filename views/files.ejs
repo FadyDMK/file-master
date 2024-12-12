@@ -33,6 +33,10 @@
       <% if (Array.isArray(folders)) { %> <% folders.forEach((folder) => { %>
       <li>
         <a href="/files/<%= folder.id %>"><%= folder.name %>(folder)</a>
+        <form action="/delete-folder/<%= folder.id %>" method="POST">
+          <input type="hidden" name="folderId" value="<%= folder.id %>" />
+          <button type="submit">Delete</button>
+        </form>
       </li>
       <% }); %> <% }%>
     </ul>
@@ -41,6 +45,10 @@
       <% if (Array.isArray(files)) { %> <% files.forEach((file) => { %>
       <li>
         <a href="/download/<%= file.id %>"><%= file.name %></a>
+        <form action="/delete-file/<%= file.id %>" method="POST">
+          <input type="hidden" name="fileId" value="<%= file.id %>" />
+          <button type="submit">Delete</button>
+        </form>
       </li>
       <% }); %> <% } else { %>
       <li>No files found</li>

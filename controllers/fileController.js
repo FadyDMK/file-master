@@ -103,3 +103,19 @@ exports.filesDownloadController = asyncHandler(async (req, res) => {
     res.status(500).send("Failed to download file");
   }
 });
+
+// Delete a file
+exports.filesDeleteController = asyncHandler(async (req, res) => {
+  const fileId = parseInt(req.params.id);
+
+  try {
+    const file = await prisma.file.findUnique({where: {id: fileId}});
+    await prisma.file.delete({
+      where: { id: fileId },
+    });
+    res.redirect(`/files/${file.folderId}`);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Failed to delete file");
+  }
+});
