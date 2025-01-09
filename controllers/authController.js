@@ -86,6 +86,8 @@ const bcrypt = require("bcrypt");
 const { PrismaClient } = require("@prisma/client");
 const jwt = require("jsonwebtoken"); // Add JWT for token-based authentication
 const prisma = new PrismaClient();
+const passport = require("../config/passportConfig");
+require("dotenv").config();
 
 exports.signUpPostController = asyncHandler(async (req, res, next) => {
   try {

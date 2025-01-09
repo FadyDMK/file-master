@@ -8,6 +8,7 @@ const { PrismaClient } = require("@prisma/client");
 const { PrismaSessionStore } = require("@quixo3/prisma-session-store");
 const passport = require("./config/passportConfig");
 const helmet = require("helmet");
+const cors = require("cors");
 
 //Routes
 const authenticationRoutes = require("./routes/authenticationRoutes");
@@ -20,6 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(helmet());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use(cors());
 
 app.use(
   session({
@@ -45,7 +47,7 @@ app.get("/", (req, res) => {
   res.render("index", { user: req.user });
 });
 
-app.use("/", authenticationRoutes);
+app.use("/api/auth", authenticationRoutes);
 
 app.use("/", userRoutes);
 
