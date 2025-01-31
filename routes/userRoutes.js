@@ -14,11 +14,16 @@ const {
 const {
   folderCreateController,
   folderDeleteController,
+  folderInfoController,
 } = require("../controllers/folderController");
+const authenticateToken = require("../middleware/authenticateToken");
 
-router.get("/files", ensureAuthenticated, filesRedirectController);
+router.get("/",authenticateToken, filesRedirectController);
 // Get all files and folders at the root level or in a specific folder
-router.get("/files/:folderId", ensureAuthenticated, filesGetController);
+router.get("/:folderId",authenticateToken, filesGetController);
+//get folder info
+router.get("/folders/:folderId",authenticateToken, folderInfoController);
+
 
 // Create a folder
 router.post("/create-folder", ensureAuthenticated, folderCreateController);
@@ -39,6 +44,8 @@ router.post("/delete-folder/:id", folderDeleteController);
 
 // Delete a file
 router.post("/delete-file/:id", filesDeleteController);
+
+// Ensure that a user is authenticated
 function ensureAuthenticated(req, res, next) {
   if (req.isAuthenticated()) {
     return next();

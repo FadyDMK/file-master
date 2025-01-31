@@ -2,6 +2,24 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const asyncHandler = require("express-async-handler");
 
+exports.folderInfoController = asyncHandler(async (req, res) => {
+  const folderId = req.params.folderId ? parseInt(req.params.folderId) : null;
+
+  try {
+    const folder = await prisma.folder.findUnique({
+      where: { id: folderId },
+    });
+    if (!folder) {
+      return res.status(404).json({ message: "Folder not found" });
+    }
+
+    res.status(200).json(folder);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Failed to retrieve folder info");
+  }
+});
+
 exports.folderCreateController = asyncHandler(async (req, res) => {
   const user = req.user;
   const folderName = req.body.folderName;

@@ -46,10 +46,10 @@ app.use(express.urlencoded({ extended: false }));
 app.get("/", (req, res) => {
   res.render("index", { user: req.user });
 });
-
+// app.use("/api/files", authenticateToken)
 app.use("/api/auth", authenticationRoutes);
 
-app.use("/", userRoutes);
+app.use("/api/files", userRoutes);
 
 app.get("*", (req, res) => {
   res.status(404).send("404 Not Found");

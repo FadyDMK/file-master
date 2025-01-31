@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const asyncHandler = require("express-async-handler");
+const path = require("path");
 
 // Redirect to the main folder
 exports.filesRedirectController = asyncHandler(async (req, res) => {
@@ -16,8 +17,20 @@ exports.filesRedirectController = asyncHandler(async (req, res) => {
         parentId: null,
         name: "index" + "_" + user.id,
       },
+      include: {
+        files: true,
+        subfolders: true,
+      },
     });
-    res.redirect(`/files/${mainFolder.id}`);
+    if (!mainFolder) {
+      return res.status(404).json({ message: "Main folder not found" });
+    }
+
+    res.status(200).json({
+      folderId: mainFolder.id,
+      files: mainFolder.files,
+      subfolders: mainFolder.subfolders,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).send("Failed to retrieve files or folders");
@@ -47,11 +60,10 @@ exports.filesGetController = asyncHandler(async (req, res) => {
       },
     });
 
-    res.render("files", {
+    res.status(200).json({
       folders,
-      files,
-      user: user,
-      currentFolderId: folderId,
+      subfolders: folders.subfolders,
+      files: files,
     });
   } catch (err) {
     console.error(err);
@@ -94,13 +106,15 @@ exports.filesDownloadController = asyncHandler(async (req, res) => {
     });
 
     if (!file) {
-      return res.status(404).send("File not found");
+      return res.status(404).json({ message: "File not found" });
     }
 
-    res.download(file.path, file.name);
+    const filePath = path.join(__dirname, '..', file.path);
+    res.setHeader('content-disposition', `attachment; filename="${file.name}"`);
+    res.sendFile(filePath);
   } catch (err) {
     console.error(err);
-    res.status(500).send("Failed to download file");
+    res.status(500).json({ message: "Failed to retrieve file" });
   }
 });
 
@@ -109,7 +123,7 @@ exports.filesDeleteController = asyncHandler(async (req, res) => {
   const fileId = parseInt(req.params.id);
 
   try {
-    const file = await prisma.file.findUnique({where: {id: fileId}});
+    const file = await prisma.file.findUnique({ where: { id: fileId } });
     await prisma.file.delete({
       where: { id: fileId },
     });
