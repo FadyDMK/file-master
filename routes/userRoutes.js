@@ -15,6 +15,7 @@ const {
   folderCreateController,
   folderDeleteController,
   folderInfoController,
+  folderBreadcrumbController,
 } = require("../controllers/folderController");
 const authenticateToken = require("../middleware/authenticateToken");
 
@@ -23,6 +24,8 @@ router.get("/",authenticateToken, filesRedirectController);
 router.get("/:folderId",authenticateToken, filesGetController);
 //get folder info
 router.get("/folders/:folderId",authenticateToken, folderInfoController);
+//get folder breadcrumb
+router.get("/breadcrumb/:folderId",authenticateToken, folderBreadcrumbController);
 
 
 // Create a folder

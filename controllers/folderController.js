@@ -64,3 +64,30 @@ exports.folderDeleteController = asyncHandler(async (req, res) => {
     res.status(500).send("Failed to delete folder");
   }
 });
+
+//get breadcrumb for folder
+exports.folderBreadcrumbController = asyncHandler(async (req, res) => {
+  const folderId = req.params.folderId ? parseInt(req.params.folderId) : null;
+  const breadcrumb = [];
+
+  try {
+    let folder = await prisma.folder.findUnique({
+      where: { id: folderId },
+    });
+
+    while (folder) {
+      breadcrumb.unshift(folder);
+      if (!folder.parentId) {
+        break;
+      }
+      folder = await prisma.folder.findUnique({
+        where: { id: folder.parentId },
+      });
+    }
+
+    res.status(200).json(breadcrumb);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Failed to retrieve folder breadcrumb");
+  }
+});

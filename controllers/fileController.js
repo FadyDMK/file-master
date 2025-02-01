@@ -3,6 +3,7 @@ const prisma = new PrismaClient();
 const asyncHandler = require("express-async-handler");
 const path = require("path");
 
+
 // Redirect to the main folder
 exports.filesRedirectController = asyncHandler(async (req, res) => {
   const user = req.user;
@@ -110,8 +111,11 @@ exports.filesDownloadController = asyncHandler(async (req, res) => {
     }
 
     const filePath = path.join(__dirname, '..', file.path);
-    res.setHeader('content-disposition', `attachment; filename="${file.name}"`);
-    res.sendFile(filePath);
+    // res.setHeader('content-disposition', `attachment; filename="${file.name}"`);
+    // res.sendFile(filePath);
+    console.log(filePath);
+    res.download(filePath, file.name);
+    console.log("Downloaded file");
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to retrieve file" });
